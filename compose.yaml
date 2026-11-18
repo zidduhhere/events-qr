@@ -1,0 +1,20 @@
+# Legacy PostgreSQL source only, if needed for db:import-postgres.
+# Normal SQLite operation does not use Docker or this service.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: events_qr
+      POSTGRES_USER: event
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - event-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U event -d events_qr"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  event-data:
