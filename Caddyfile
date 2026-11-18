@@ -1,0 +1,5 @@
+# Replace dining.local with your LAN DNS name. Trust Caddy's CA on every phone.
+dining.local {
+    tls internal
+    reverse_proxy 127.0.0.1:3001
+}
