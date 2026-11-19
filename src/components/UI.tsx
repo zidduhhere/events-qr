@@ -1,0 +1,8 @@
+import type { ReactNode } from 'react'
+import Icon, { type IconName } from './Icon'
+export function PageHeading({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) { return <div className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p className="muted">{description}</p></div><div className="heading-actions">{children}</div></div> }
+export function ErrorBox({ message, retry }: { message: string; retry?: () => void }) { return <div className="error-box" role="alert"><Icon name="alert" /><div><strong>Connection or request failed</strong><p>{message}</p></div>{retry && <button className="button small" onClick={retry}>Retry</button>}</div> }
+export function Empty({ icon = 'users', title, description }: { icon?: IconName; title: string; description: string }) { return <div className="empty"><span className="empty-icon"><Icon name={icon} size={25}/></span><h3>{title}</h3><p>{description}</p></div> }
+export function PassBadge({ pass }: { pass: string }) { return <span className={'badge pass-' + pass.toLowerCase()}><span className="badge-dot" />{pass}</span> }
+export function StatusBadge({ status }: { status: string }) { return <span className={'badge status-' + status}><span className="badge-dot" />{status === 'open' ? 'Open now' : status === 'closed' ? 'Closed' : status}</span> }
+export function Avatar({ name, small }: { name: string; small?: boolean }) { return <span className={'avatar' + (small ? ' small-avatar' : '')}>{name.split(/\s+/).slice(0,2).map(s => s[0]).join('').toUpperCase()}</span> }
