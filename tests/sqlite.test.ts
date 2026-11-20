@@ -1,0 +1,14 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createDatabase, migrate, transaction } from '../server/db.ts'
+import { createParticipant, getParticipant, listParticipants, getFamily, dashboard, listSessions, listPasses, saveSession, updatePass, redeem, getPrintSettings, updatePrintSettings } from '../server/operations.ts'
+test('SQLite persists Unicode participants, guests, settings and balances after reopening', async () => {
+ const folder=await mkdtemp(join(tmpdir(),'tablepass-'));const path=join(folder,'events.db');let db=await createDatabase(path)
+ try{await migrate(db);const input={name:'অনু മലയാളം',phone:'9876543210',passId:'silver' as const,parentId:null,lunchOverride:null,dinnerOverride:null,totalOverride:null,deviceLabel:'Gate 1'};const p=await createParticipant(db,input);await createParticipant(db,{...input,name:'Guest',parentId:p.id});await updatePrintSettings(db,60,50,'Gate 1');await db.end();db=await createDatabase(path);await migrate(db);assert.equal((await getParticipant(db,p.id)).name,input.name);assert.equal((await getFamily(db,p.id)).length,2);assert.equal((await listParticipants(db,'Guest')).length,1);assert.equal((await dashboard(db)).participants,2);assert.equal((await listSessions(db)).length,3);assert.equal((await listPasses(db)).length,2);assert.equal((await getPrintSettings(db)).width_mm,60)
+ }finally{await db.end();await rm(folder,{recursive:true,force:true})}
+})
+test('failed transaction rolls back and releases its connection',async()=>{const db=await createDatabase(':memory:');try{await migrate(db);await assert.rejects(transaction(db,async c=>{await c.query('UPDATE passes SET lunch_limit=$1 WHERE id=$2',[9,'silver']);throw new Error('rollback')}),/rollback/);assert.equal((await listPasses(db)).find(p=>p.id==='silver')?.lunch_limit,2)}finally{await db.end()}})
+test('meal-type and total limits apply independently across sessions',async()=>{const db=await createDatabase(':memory:');try{await migrate(db);await updatePass(db,'silver',{lunch:1,dinner:2,total:2,deviceLabel:''});const p=await createParticipant(db,{name:'Limits',phone:'9876543210',passId:'silver',parentId:null,lunchOverride:null,dinnerOverride:null,totalOverride:null,deviceLabel:''});const lunch=await saveSession(db,null,{name:'Lunch test',mealType:'lunch',status:'open',perPersonLimit:3,deviceLabel:''});const dinner=await saveSession(db,null,{name:'Dinner test',mealType:'dinner',status:'open',perPersonLimit:3,deviceLabel:''});const scan=(sessionId:string)=>redeem(db,{requestId:crypto.randomUUID(),qrToken:p.qr_token,sessionId,deviceLabel:''});assert.equal((await scan(lunch.id)).approved,true);assert.match((await scan(lunch.id)).reason,/Lunch allowance/);assert.equal((await scan(dinner.id)).approved,true);assert.match((await scan(dinner.id)).reason,/Total meal/)}finally{await db.end()}})
