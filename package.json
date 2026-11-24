@@ -16,7 +16,9 @@
     "https:setup": "node scripts/setup-https.mjs",
     "db:import-postgres": "node --env-file-if-exists=.env server/import-postgres.ts",
     "db:import-excel": "node --env-file-if-exists=.env server/import-excel.ts",
-    "qr:export": "node --env-file-if-exists=.env server/export-qr.ts"
+    "qr:export": "node --env-file-if-exists=.env server/export-qr.ts",
+    "db:check-final": "node --env-file-if-exists=.env server/reconcile-final.ts",
+    "db:sync-final": "node --env-file-if-exists=.env server/reconcile-final.ts --apply"
   },
   "dependencies": {
     "@zxing/browser": "^0.1.5",

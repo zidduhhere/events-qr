@@ -55,4 +55,11 @@ CREATE TABLE IF NOT EXISTS participant_qr_images (
  participant_id text PRIMARY KEY REFERENCES participants(id), png blob NOT NULL,
  created_at text NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
+CREATE TABLE IF NOT EXISTS final_registration_stage (
+ batch_id text NOT NULL, registration_number text NOT NULL,
+ participant_id text NOT NULL REFERENCES participants(id), match_method text NOT NULL,
+ previous_json text NOT NULL CHECK(json_valid(previous_json)),
+ desired_json text NOT NULL CHECK(json_valid(desired_json)),
+ PRIMARY KEY(batch_id,registration_number), UNIQUE(batch_id,participant_id)
+);
 COMMIT;
