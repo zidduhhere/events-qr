@@ -60,7 +60,7 @@ export async function migrate(pool: Database) {
     INSERT INTO passes_expanded SELECT * FROM passes; DROP TABLE passes; ALTER TABLE passes_expanded RENAME TO passes; COMMIT; PRAGMA foreign_keys=ON;`)
   await pool.exec(await readFile(new URL('./schema.sql', import.meta.url), 'utf8'))
   const columns=(await pool.query<{name:string}>('PRAGMA table_info(participants)')).rows
-  for (const name of ['registration_number','category','hospital','food_requirement','source_import']) if(!columns.some(c=>c.name===name)) await pool.exec(`ALTER TABLE participants ADD COLUMN ${name} text`)
+  for (const name of ['registration_number','category','hospital','food_requirement','source_import','removed_at']) if(!columns.some(c=>c.name===name)) await pool.exec(`ALTER TABLE participants ADD COLUMN ${name} text`)
   await pool.exec('CREATE UNIQUE INDEX IF NOT EXISTS participant_registration ON participants(registration_number) WHERE registration_number IS NOT NULL')
   if(!(await pool.query<{name:string}>('PRAGMA table_info(meal_sessions)')).rows.some(c=>c.name==='archived')) await pool.exec('ALTER TABLE meal_sessions ADD COLUMN archived integer NOT NULL DEFAULT 0 CHECK(archived IN (0,1))')
   await transaction(pool, async c => {

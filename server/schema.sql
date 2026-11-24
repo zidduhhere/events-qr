@@ -9,6 +9,7 @@ INSERT INTO passes VALUES ('platinum','Platinum',2,2,4),('silver','Silver',2,2,4
 CREATE TABLE IF NOT EXISTS participants (
  id text PRIMARY KEY, name text NOT NULL CHECK(length(name) BETWEEN 1 AND 120), phone text NOT NULL,
  pass_id text NOT NULL REFERENCES passes(id), parent_id text REFERENCES participants(id),
+ removed_at text,
  qr_token text NOT NULL UNIQUE, lunch_override integer CHECK(lunch_override BETWEEN 0 AND 10000),
  dinner_override integer CHECK(dinner_override BETWEEN 0 AND 10000), total_override integer CHECK(total_override BETWEEN 0 AND 10000),
  created_at text NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), CHECK(parent_id IS DISTINCT FROM id)

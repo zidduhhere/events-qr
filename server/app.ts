@@ -42,7 +42,7 @@ export function createApp(db: Database): RequestListener {
       const family = path.match(/^\/api\/participants\/([^/]+)\/family$/)
       if (family && method === 'GET') return json(res, 200, await ops.getFamily(db, uuid(family[1])))
       const participant = path.match(/^\/api\/participants\/([^/]+)$/)
-      if (participant) { const id = uuid(participant[1]); if (method === 'GET') return json(res, 200, await ops.getParticipant(db, id)); if (method === 'PUT') return json(res, 200, await ops.updateParticipant(db, id, parseParticipant(await body(req)))) }
+      if (participant) { const id = uuid(participant[1]); if (method === 'GET') return json(res, 200, await ops.getParticipant(db, id)); if (method === 'DELETE') { const input=object(await body(req)); return json(res,200,await ops.removeParticipant(db,id,text(input.reason,'Removal reason',500),device(input.deviceLabel))) } if (method === 'PUT') return json(res, 200, await ops.updateParticipant(db, id, parseParticipant(await body(req)))) }
       const print = path.match(/^\/api\/participants\/([^/]+)\/print$/)
       if (print && method === 'POST') {
         const id = uuid(print[1]); const input = object(await body(req)); const p = await ops.getParticipant(db, id)
@@ -60,6 +60,9 @@ export function createApp(db: Database): RequestListener {
       if (path === '/api/sessions' && method === 'POST') return json(res, 201, await ops.saveSession(db, null, parseSession(await body(req))))
       const session = path.match(/^\/api\/sessions\/([^/]+)$/)
       if (session && method === 'PUT') return json(res, 200, await ops.saveSession(db, uuid(session[1]), parseSession(await body(req))))
+      if(path==='/api/dinner-check-in' && method==='POST'){
+        const input=object(await body(req));return json(res,200,await ops.manualDinnerCheckIn(db,{participantId:uuid(input.participantId,'Participant ID'),sessionId:uuid(input.sessionId,'Session ID'),requestId:uuid(input.requestId,'Request ID'),deviceLabel:device(input.deviceLabel)}))
+      }
       if (path === '/api/redemptions' && method === 'POST') return json(res, 200, await ops.redeem(db, parseRedemption(await body(req))))
       if (path === '/api/redemptions' && method === 'GET') return json(res, 200, await ops.listRedemptions(db))
       const voided = path.match(/^\/api\/redemptions\/([^/]+)\/void$/)

@@ -98,3 +98,9 @@ The frontend API proxy uses `PORT` from `.env` (default 3001), matching the Node
 `/scan` uses a standalone iOS-style layout. Select the actual dated meal; if closed, use **Open session** when ready to serve. The legacy Day 1 placeholder selections are replaced on the device by their corresponding dated event sessions, so they cannot accidentally check an unrelated eligibility list. A dinner pass still requires the real 28 November dinner session to be open.
 
 Confirmed approvals and denials show a pop-up for one second, then leave a small last-result summary. Camera decoding continues between passes. Connection failures and unresolved requests remain visible with a same-request retry action; they do not dismiss as a successful completed scan. Gate label and sound are in the options menu; keyboard/manual input is in an expandable section.
+
+## Participant removal and manual dinner entry
+
+Open a participant's details and choose **Remove participant**. A reason is required. Removal disables their QR and excludes them from active participant lists, headcounts and QR exports. Attendance, QR identity and audit history are retained. Linked guests remain registered independently, with their parent links cleared and audited.
+
+On the dashboard, choose **Manual dinner check-in**, select the dinner session, search by name/phone/registration number, select the person and confirm. The session must be open. The same eligibility, session/type/total allowance and duplicate protections apply as camera scans. Uncertain requests are stored locally and retried with the same request ID. Audit records distinguish manual entries using `entryMethod: manual`; device labels remain unverified operational metadata.

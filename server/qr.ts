@@ -6,7 +6,7 @@ type QRParticipant={id:string;name:string;registration_number:string|null;catego
 export async function ensureQrImage(db:Pick<Connection,'query'>,id:string):Promise<Buffer>{
  const existing=(await db.query<{png:Uint8Array}>('SELECT png FROM participant_qr_images WHERE participant_id=$1',[id])).rows[0]
  if(existing)return Buffer.from(existing.png)
- const p=(await db.query<{qr_token:string}>('SELECT qr_token FROM participants WHERE id=$1',[id])).rows[0]
+ const p=(await db.query<{qr_token:string}>('SELECT qr_token FROM participants WHERE id=$1 AND removed_at IS NULL',[id])).rows[0]
  if(!p)throw new HttpError(404,'Participant not found.')
  const png=await QRCode.toBuffer(p.qr_token,{type:'png',errorCorrectionLevel:'M',margin:4,scale:24,color:{dark:'#000000',light:'#ffffff'}})
  await db.query('INSERT INTO participant_qr_images(participant_id,png) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,png])
@@ -28,7 +28,7 @@ export function zipFiles(files:{name:string;data:Buffer}[]):Buffer{
  return Buffer.concat([...chunks,...directory,end])
 }
 export async function exportQrZip(db:Database,label=''){
- const people=(await db.query<QRParticipant>('SELECT p.*,ps.name AS pass_name FROM participants p JOIN passes ps ON ps.id=p.pass_id ORDER BY COALESCE(p.registration_number,p.id),p.id')).rows
+ const people=(await db.query<QRParticipant>('SELECT p.*,ps.name AS pass_name FROM participants p JOIN passes ps ON ps.id=p.pass_id WHERE p.removed_at IS NULL ORDER BY COALESCE(p.registration_number,p.id),p.id')).rows
  if(!people.length)throw new HttpError(400,'No participants to export. Register or import participants first.')
  const files:{name:string;data:Buffer}[]=[]
  const mapping:unknown[][]=[['Registration number','Name','Category','Pass','Participant ID','Parent participant ID','QR image filename']]
